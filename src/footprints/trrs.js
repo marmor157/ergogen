@@ -1,8 +1,24 @@
 // TRRS-PJ-320A-dual
+//
+// Normal footprint:
 //     _________________
-//    | (1)     (3) (4)|
+//    |   (2)   (3) (4)|
 //    |                |
-//    |___(2)__________|
+//    | (1)            |
+//    |________________|
+//
+// Reverse footprint:
+//     _________________
+//    |   (2)   (3) (4)|
+//    | (1)            |
+//    | (1)            |
+//    |___(2)___(3)_(4)|
+//
+// Reverse & symmetric footprint:
+//     _________________
+//    | (1|2)   (3) (4)|
+//    |                |
+//    |_(1|2)___(3)_(4)|
 //
 // Nets
 //    A: corresponds to pin 1
@@ -22,24 +38,23 @@ module.exports = {
     A: undefined,
     B: undefined,
     C: undefined,
-    D: undefined
+    D: undefined,
   },
   params: {
-    class: 'TRRS',
+    class: "TRRS",
     reverse: false,
-    symmetric: false
+    symmetric: false,
   },
-  body: p => {
+  body: (p) => {
     const standard = `
       (module TRRS-PJ-320A-dual (layer F.Cu) (tedit 5970F8E5)
-
       ${p.at /* parametric position */}   
-
-      ${'' /* footprint reference */}
-      (fp_text reference REF** (at 0 14.2) (layer Dwgs.User) (effects (font (size 1 1) (thickness 0.15))))
+      ${"" /* footprint reference */}
+      (fp_text reference "${
+        p.ref
+      }" (at 0 14.2) (layer Dwgs.User) (effects (font (size 1 1) (thickness 0.15))))
       (fp_text value TRRS-PJ-320A-dual (at 0 -5.6) (layer F.Fab) (effects (font (size 1 1) (thickness 0.15))))
-
-      ${''/* corner marks */}
+      ${"" /* corner marks */}
       (fp_line (start 0.5 -2) (end -5.1 -2) (layer Dwgs.User) (width 0.15))
       (fp_line (start -5.1 0) (end -5.1 -2) (layer Dwgs.User) (width 0.15))
       (fp_line (start 0.5 0) (end 0.5 -2) (layer Dwgs.User) (width 0.15))
@@ -47,36 +62,42 @@ module.exports = {
       (fp_line (start 0.75 0) (end 0.75 12.1) (layer Dwgs.User) (width 0.15))
       (fp_line (start 0.75 12.1) (end -5.35 12.1) (layer Dwgs.User) (width 0.15))
       (fp_line (start 0.75 0) (end -5.35 0) (layer Dwgs.User) (width 0.15))
-
-      ${''/* stabilizers */}
-      (pad "" np_thru_hole circle (at -2.3 8.6) (size 1.5 1.5) (drill 1.5) (layers *.Cu *.Mask))
-      (pad "" np_thru_hole circle (at -2.3 1.6) (size 1.5 1.5) (drill 1.5) (layers *.Cu *.Mask))
-      `
+      `;
+    function stabilizers(def_pos) {
+      return `
+        (pad "" np_thru_hole circle (at ${def_pos} 8.6) (size 1.5 1.5) (drill 1.5) (layers *.Cu *.Mask))
+        (pad "" np_thru_hole circle (at ${def_pos} 1.6) (size 1.5 1.5) (drill 1.5) (layers *.Cu *.Mask))
+      `;
+    }
     function pins(def_neg, def_pos) {
       return `
         (pad 1 thru_hole oval (at ${def_neg} 11.3 ${p.rot}) (size 1.6 2.2) (drill oval 0.9 1.5) (layers *.Cu *.Mask) ${p.net.A.str})
         (pad 2 thru_hole oval (at ${def_pos} 10.2 ${p.rot}) (size 1.6 2.2) (drill oval 0.9 1.5) (layers *.Cu *.Mask) ${p.net.B.str})
         (pad 3 thru_hole oval (at ${def_pos} 6.2 ${p.rot}) (size 1.6 2.2) (drill oval 0.9 1.5) (layers *.Cu *.Mask) ${p.net.C.str})
         (pad 4 thru_hole oval (at ${def_pos} 3.2 ${p.rot}) (size 1.6 2.2) (drill oval 0.9 1.5) (layers *.Cu *.Mask) ${p.net.D.str})
-      `
+      `;
     }
-    if(p.param.reverse & p.param.symmetric) {
+    if (p.param.reverse & p.param.symmetric) {
       return `
         ${standard}
-        ${pins('0', '-4.6')}
-        ${pins('-4.6', '0')})
-      `
-    } else if(p.param.reverse) {
-        return `
+        ${stabilizers("-2.3")}
+        ${pins("0", "-4.6")}
+        ${pins("-4.6", "0")})
+      `;
+    } else if (p.param.reverse) {
+      return `
           ${standard}
-          ${pins('-4.6', '0')}
-          ${pins('4.6', '0')})
-        `
-      } else {
-        return `
-          ${standard}
-          ${pins('-4.6', '0')})
-        `
-      }
-  }
-}
+          ${stabilizers("-2.3")}
+          ${stabilizers("0")}
+          ${pins("-2.3", "2.3")}
+          ${pins("0", "-4.6")})
+        `;
+    } else {
+      return `
+        ${standard}
+        ${stabilizers("-2.3")}
+        ${pins("-4.6", "0")})
+      `;
+    }
+  },
+};
