@@ -141,7 +141,7 @@ module.exports = {
     }
     return `
       ${standard}
-      ${pins("", "-")}
+      ${pins("", "-")})
     `;
   },
 }
