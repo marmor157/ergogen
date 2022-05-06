@@ -7,6 +7,7 @@ module.exports = {
     elitec: require('./elitec'),
     jstph: require('./jstph'),
     jumper: require('./jumper'),
+    led_sk6812: require('./led_sk6812'),
     mx: require('./mx'),
     oled: require('./oled'),
     omron: require('./omron'),
